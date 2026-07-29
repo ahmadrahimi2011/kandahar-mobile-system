@@ -74,6 +74,7 @@ class Mobile(db.Model):
     tazkira_number = db.Column(db.String(50))
     tazkira_photo = db.Column(db.String(300))
     selfie_photo = db.Column(db.String(300))
+    purchase_price = db.Column(db.Integer, default=0)
     status = db.Column(db.String(20), default='active')
     shop_id = db.Column(db.Integer, db.ForeignKey('shops.id'))
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
