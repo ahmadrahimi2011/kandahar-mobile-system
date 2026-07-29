@@ -11,6 +11,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
 from translations import T
 from dotenv import load_dotenv
+from supabase import create_client, Client
 
 load_dotenv()
 
@@ -27,6 +28,8 @@ login_manager.login_view = 'shop_login'
 SUPABASE_URL = os.getenv('SUPABASE_URL')
 SUPABASE_KEY = os.getenv('SUPABASE_KEY')
 BUCKET_NAME = 'kandahar-photos'
+
+supabase_client: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 # ---------- LANGUAGES ----------
 LANGUAGES = ['en', 'ps', 'fa']
@@ -74,7 +77,7 @@ class Mobile(db.Model):
     tazkira_number = db.Column(db.String(50))
     tazkira_photo = db.Column(db.String(300))
     selfie_photo = db.Column(db.String(300))
-    purchase_price = db.Column(db.Integer, default=0)
+    purchase_price = db.Column(db.Integer, default=0)  # ✅ Purchase Price
     status = db.Column(db.String(20), default='active')
     shop_id = db.Column(db.Integer, db.ForeignKey('shops.id'))
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
@@ -131,35 +134,28 @@ def notify_shop(shop_id, message):
     db.session.add(notif)
     db.session.commit()
 
-# ---------- SUPABASE UPLOAD FUNCTION ----------
 def upload_to_supabase(file, folder_name):
     try:
         file.seek(0)
         file_data = file.read()
         timestamp = datetime.utcnow().timestamp()
-        
-        # File extension preserve karein
         original_filename = file.filename
         if '.' in original_filename:
             extension = original_filename.rsplit('.', 1)[1].lower()
         else:
-            extension = 'jpg'  # default
-        
+            extension = 'jpg'
         filename = f"{timestamp}.{extension}"
         file_path = f"{folder_name}/{filename}"
-        
+
         url = f"{SUPABASE_URL}/storage/v1/object/{BUCKET_NAME}/{file_path}"
         headers = {
             "Authorization": f"Bearer {SUPABASE_KEY}",
             "Content-Type": file.content_type,
             "x-upsert": "true"
         }
-        
         response = requests.post(url, headers=headers, data=file_data)
-        
         if response.status_code in [200, 201]:
             public_url = f"{SUPABASE_URL}/storage/v1/object/public/{BUCKET_NAME}/{file_path}"
-            print(f"✅ Upload successful: {public_url}")
             return public_url
         else:
             print(f"Upload failed: {response.status_code} - {response.text}")
@@ -167,6 +163,23 @@ def upload_to_supabase(file, folder_name):
     except Exception as e:
         print(f"Upload exception: {str(e)}")
         return None
+
+def delete_photo_from_supabase(photo_url):
+    """Delete a photo from Supabase Storage given its public URL."""
+    if not photo_url:
+        return
+    try:
+        # Extract the file path from the public URL
+        # Example: https://.../storage/v1/object/public/kandahar-photos/tazkira/123.jpg
+        parts = photo_url.split(f'/public/{BUCKET_NAME}/')
+        if len(parts) == 2:
+            file_path = parts[1]
+            supabase_client.storage.from_(BUCKET_NAME).remove([file_path])
+            print(f"Deleted photo: {file_path}")
+        else:
+            print(f"Invalid URL format: {photo_url}")
+    except Exception as e:
+        print(f"Error deleting photo: {e}")
 
 # ---------- ROUTES ----------
 @app.route('/')
@@ -202,7 +215,6 @@ def shop_dashboard():
     stolen_alert_count = Mobile.query.filter_by(status='stolen').count()
     return render_template('shop_dashboard.html', mobiles=my_mobiles, unread_count=unread_count, stolen_alert_count=stolen_alert_count)
 
-# ========== ADD MOBILE ROUTE ==========
 @app.route('/shop/add-mobile', methods=['GET', 'POST'])
 @login_required
 def add_mobile():
@@ -211,6 +223,7 @@ def add_mobile():
         imei2 = request.form['imei2'].strip() if request.form['imei2'] else None
         color = request.form['color'].strip()
         source_type = request.form['source_type']
+        purchase_price = request.form.get('purchase_price', 0, type=int)
 
         if not is_valid_imei(imei1):
             flash(get_text('invalid_imei'), 'danger')
@@ -228,7 +241,7 @@ def add_mobile():
                 flash('For Local Purchase, Customer Name, Phone, and Tazkira ID are required!', 'danger')
                 return redirect(url_for('add_mobile'))
 
-        # ---------- UPLOAD TAZKIRA PHOTO ----------
+        # ---------- UPLOAD PHOTOS ----------
         tazkira_photo_url = None
         if 'tazkira_photo' in request.files:
             file = request.files['tazkira_photo']
@@ -238,7 +251,6 @@ def add_mobile():
                     flash('Error uploading Tazkira photo. Please try again.', 'danger')
                     return redirect(url_for('add_mobile'))
 
-        # ---------- UPLOAD SELFIE PHOTO ----------
         selfie_photo_url = None
         if 'selfie_photo' in request.files:
             file = request.files['selfie_photo']
@@ -262,20 +274,19 @@ def add_mobile():
             color=color,
             model=request.form['model'],
             brand=request.form['brand'],
-            purchase_price=request.form.get('purchase_price', 0, type=int),
             source_type=source_type,
             customer_name=customer_name if source_type == 'local' else None,
             customer_phone=customer_phone if source_type == 'local' else None,
             tazkira_number=tazkira_number if source_type == 'local' else None,
             tazkira_photo=tazkira_photo_url if source_type == 'local' else None,
             selfie_photo=selfie_photo_url if source_type == 'local' else None,
+            purchase_price=purchase_price,
             shop_id=current_user.id,
             status='active'
         )
         db.session.add(new_mobile)
         db.session.commit()
 
-        # ---------- IF STOLEN: ALERT ----------
         if stolen_mobile:
             new_mobile.status = 'stolen'
             detection = DetectionLog(
@@ -300,7 +311,6 @@ def add_mobile():
                             tazkira=tazkira_number if tazkira_number else 'N/A'
                         )
                     )
-
             admin = Shop.query.filter_by(username='admin').first()
             if admin:
                 notify_shop(
@@ -314,25 +324,47 @@ def add_mobile():
                         selfie='Uploaded' if selfie_photo_url else 'Not uploaded'
                     )
                 )
-
             notify_shop(
                 current_user.id,
                 get_text('hold_seller_alert')
             )
-
             db.session.commit()
             flash(get_text('hold_seller_alert'), 'danger')
         else:
             flash(get_text('add_success'), 'success')
-
         return redirect(url_for('shop_dashboard'))
-
     return render_template('add_mobile.html')
 
-# ========== (BAQI ROUTES – Admin, Notifications, Search, etc.) ==========
-# Woh saare routes jo pehle se the, yahan daal dein.
-# Is jagah main ne sirf add_mobile tak likha hai.
-# Baqi routes (admin, search, etc.) aap pehle se apni file mein rakhein.
+@app.route('/shop/notifications')
+@login_required
+def notifications():
+    notifs = Notification.query.filter_by(shop_id=current_user.id).order_by(Notification.created_at.desc()).all()
+    for n in notifs:
+        n.is_read = True
+    db.session.commit()
+    return render_template('notifications.html', notifications=notifs)
+
+@app.route('/shop/change-password', methods=['GET', 'POST'])
+@login_required
+def change_password():
+    if request.method == 'POST':
+        old = request.form['old_password']
+        new = request.form['new_password']
+        confirm = request.form['confirm_password']
+        if not check_password_hash(current_user.password_hash, old):
+            flash('Old password incorrect.', 'danger')
+            return redirect(url_for('change_password'))
+        if new != confirm:
+            flash('Passwords do not match.', 'danger')
+            return redirect(url_for('change_password'))
+        if len(new) < 6:
+            flash('Password must be at least 6 characters.', 'danger')
+            return redirect(url_for('change_password'))
+        current_user.password_hash = generate_password_hash(new)
+        db.session.commit()
+        flash('Password changed successfully!', 'success')
+        return redirect(url_for('shop_dashboard'))
+    return render_template('change_password.html')
 
 # ---------- ADMIN ROUTES ----------
 @app.route('/admin/shops')
@@ -343,8 +375,6 @@ def admin_shops():
         return redirect(url_for('shop_dashboard'))
     all_shops = Shop.query.all()
     return render_template('admin_shops.html', shops=all_shops)
-
-
 
 @app.route('/admin/change-role/<int:shop_id>', methods=['POST'])
 @login_required
@@ -443,7 +473,8 @@ def admin_all_mobiles():
         query = query.filter_by(status=status_filter)
     all_mobiles = query.order_by(Mobile.created_at.desc()).all()
     shops = Shop.query.all()
-    return render_template('admin_all_mobiles.html', mobiles=all_mobiles, shops=shops, filters={'imei': imei_filter, 'shop_id': shop_filter, 'brand': brand_filter, 'status': status_filter})
+    return render_template('admin_all_mobiles.html', mobiles=all_mobiles, shops=shops,
+                           filters={'imei': imei_filter, 'shop_id': shop_filter, 'brand': brand_filter, 'status': status_filter})
 
 @app.route('/admin/search-imei', methods=['GET', 'POST'])
 @login_required
@@ -469,7 +500,14 @@ def admin_suspicious_shops():
         flash('Access denied.', 'danger')
         return redirect(url_for('shop_dashboard'))
     from sqlalchemy import func
-    suspicious_shops = db.session.query(Shop, func.count(IMEICheckLog.id).label('search_count')).outerjoin(IMEICheckLog, (IMEICheckLog.checked_by == db.func.cast(Shop.id, db.String)) & (IMEICheckLog.status == 'suspicious_search')).group_by(Shop.id).all()
+    suspicious_shops = db.session.query(
+        Shop,
+        func.count(IMEICheckLog.id).label('search_count')
+    ).outerjoin(
+        IMEICheckLog,
+        (IMEICheckLog.checked_by == db.func.cast(Shop.id, db.String)) &
+        (IMEICheckLog.status == 'suspicious_search')
+    ).group_by(Shop.id).all()
     return render_template('admin_suspicious_shops.html', shops=suspicious_shops)
 
 @app.route('/admin/toggle-block/<int:shop_id>', methods=['POST'])
@@ -498,7 +536,11 @@ def admin_report_stolen(mobile_id):
         flash('Already stolen.', 'warning')
         return redirect(url_for('admin_all_mobiles'))
     mobile.status = 'stolen'
-    report = StolenReport(mobile_id=mobile.id, reported_by_shop_id=current_user.id, description=request.form.get('description', 'Admin reported'))
+    report = StolenReport(
+        mobile_id=mobile.id,
+        reported_by_shop_id=current_user.id,
+        description=request.form.get('description', 'Admin reported')
+    )
     db.session.add(report)
     if mobile.shop_id:
         notify_shop(mobile.shop_id, f"⚠️ Admin marked your {mobile.brand} {mobile.model} as STOLEN.")
@@ -523,57 +565,6 @@ def admin_recover_mobile(mobile_id):
     flash('Mobile recovered!', 'success')
     return redirect(url_for('admin_all_mobiles'))
 
-@app.route('/admin/delete-mobile/<int:mobile_id>', methods=['POST'])
-@login_required
-def admin_delete_mobile(mobile_id):
-    if current_user.role != 'admin':
-        flash(get_text('access_denied'), 'danger')
-        return redirect(url_for('shop_dashboard'))
-    mobile = Mobile.query.get_or_404(mobile_id)
-    StolenReport.query.filter_by(mobile_id=mobile.id).delete()
-    DetectionLog.query.filter_by(mobile_id=mobile.id).delete()
-    db.session.delete(mobile)
-    db.session.commit()
-    flash(get_text('record_deleted'), 'success')
-    return redirect(url_for('admin_all_mobiles'))
-
-@app.route('/shop/notifications')
-@login_required
-def notifications():
-    notifs = Notification.query.filter_by(shop_id=current_user.id).order_by(Notification.created_at.desc()).all()
-    for n in notifs:
-        n.is_read = True
-    db.session.commit()
-    return render_template('notifications.html', notifications=notifs)
-
-@app.route('/shop/change-password', methods=['GET', 'POST'])
-@login_required
-def change_password():
-    if request.method == 'POST':
-        old = request.form['old_password']
-        new = request.form['new_password']
-        confirm = request.form['confirm_password']
-        if not check_password_hash(current_user.password_hash, old):
-            flash('Old password incorrect.', 'danger')
-            return redirect(url_for('change_password'))
-        if new != confirm:
-            flash('Passwords do not match.', 'danger')
-            return redirect(url_for('change_password'))
-        if len(new) < 6:
-            flash('Password must be at least 6 characters.', 'danger')
-            return redirect(url_for('change_password'))
-        current_user.password_hash = generate_password_hash(new)
-        db.session.commit()
-        flash('Password changed successfully!', 'success')
-        return redirect(url_for('shop_dashboard'))
-    return render_template('change_password.html')
-
-@app.route('/api/unread-count')
-@login_required
-def api_unread_count():
-    count = Notification.query.filter_by(shop_id=current_user.id, is_read=False).count()
-    return {"count": count}
-
 @app.route('/shop/recover-mobile/<int:mobile_id>', methods=['POST'])
 @login_required
 def recover_mobile(mobile_id):
@@ -590,6 +581,40 @@ def recover_mobile(mobile_id):
         notify_shop(mobile.shop_id, get_text('recovered_notification').format(brand=mobile.brand, model=mobile.model, imei=mobile.imei1))
     flash('Mobile marked as recovered by Admin!', 'success')
     return redirect(url_for('admin_all_mobiles'))
+
+# ---------- ADMIN DELETE MOBILE (with photo delete) ----------
+@app.route('/admin/delete-mobile/<int:mobile_id>', methods=['POST'])
+@login_required
+def admin_delete_mobile(mobile_id):
+    if current_user.role != 'admin':
+        flash(get_text('access_denied'), 'danger')
+        return redirect(url_for('shop_dashboard'))
+
+    mobile = Mobile.query.get_or_404(mobile_id)
+
+    # ---------- DELETE PHOTOS FROM SUPABASE ----------
+    if mobile.tazkira_photo:
+        delete_photo_from_supabase(mobile.tazkira_photo)
+    if mobile.selfie_photo:
+        delete_photo_from_supabase(mobile.selfie_photo)
+
+    # ---------- DELETE RECORD ----------
+    StolenReport.query.filter_by(mobile_id=mobile.id).delete()
+    DetectionLog.query.filter_by(mobile_id=mobile.id).delete()
+    db.session.delete(mobile)
+    db.session.commit()
+
+    flash(get_text('record_deleted'), 'success')
+    return redirect(url_for('admin_all_mobiles'))
+
+
+
+# ---------- API UNREAD COUNT ----------
+@app.route('/api/unread-count')
+@login_required
+def api_unread_count():
+    count = Notification.query.filter_by(shop_id=current_user.id, is_read=False).count()
+    return {"count": count}
 
 # ---------- CREATE TABLES & SEED ----------
 with app.app_context():
@@ -622,3 +647,6 @@ with app.app_context():
         db.session.commit()
         print("✅ Demo shop created: demo_shop / demo123")
 
+if __name__ == '__main__':
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port, debug=True)
