@@ -22,6 +22,7 @@
                 <th>IMEI</th>
                 <th>{{ t('source_type') }}</th>
                 <th>Brand/Model</th>
+                <th>Purchase Price</th>
                 <th>{{ t('status') }}</th>
                 <th>{{ t('customer_seller') }}</th>
                 <th>{{ t('selfie_photo') }}</th>
@@ -41,6 +42,7 @@
                 {% endif %}
             </td>
             <td>{{ m.brand }} {{ m.model }}</td>
+            <td>{{ m.purchase_price if m.purchase_price else '-' }} AFN</td>
             <td>
                 <span class="badge bg-{% if m.status == 'stolen' %}danger{% elif m.status == 'detected' %}warning{% elif m.status == 'recovered' %}success{% else %}success{% endif %}">
                     {{ m.status.upper() }}

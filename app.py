@@ -68,6 +68,7 @@ class Mobile(db.Model):
     color = db.Column(db.String(30))
     model = db.Column(db.String(100))
     brand = db.Column(db.String(50))
+    purchase_price = db.Column(db.Integer, default=0)
     source_type = db.Column(db.String(20), default='local')
     customer_name = db.Column(db.String(100))
     customer_phone = db.Column(db.String(20))
@@ -261,6 +262,7 @@ def add_mobile():
             color=color,
             model=request.form['model'],
             brand=request.form['brand'],
+            purchase_price=request.form.get('purchase_price', 0, type=int),
             source_type=source_type,
             customer_name=customer_name if source_type == 'local' else None,
             customer_phone=customer_phone if source_type == 'local' else None,

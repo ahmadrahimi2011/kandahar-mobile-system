@@ -28,6 +28,10 @@
             <div class="col-md-4 mb-3"><label>{{ t('brand') }}</label><input class="form-control" name="brand"></div>
             <div class="col-md-4 mb-3"><label>{{ t('model') }}</label><input class="form-control" name="model"></div>
         </div>
+       <div class="col-md-4 mb-3">
+          <label class="form-label">Purchase Price (AFN)</label>
+          <input class="form-control" name="purchase_price" type="number" placeholder="e.g. 15000" min="0">
+       </div>
 
         <div id="customerSection" style="display: none;">
             <hr><h5>👤 {{ t('customer_seller') }}</h5>
