@@ -53,7 +53,7 @@
                 <th>{{ t('source_type') }}</th>
                 <th>{{ t('shop_name') }}</th>
                 <th>{{ t('brand') }}/{{ t('model') }}</th>
-                <th>Purchase Price</th>
+                <th>{{ t('purchase_price') }}</th>
                 <th>{{ t('customer_seller') }}</th>
                 <th>{{ t('tazkira_id') }}</th>
                 <th>{{ t('selfie_photo') }}</th>
@@ -76,7 +76,7 @@
                 </td>
                 <td>{{ m.owner_shop.shop_name }}</td>
                 <td>{{ m.brand }} {{ m.model }}</td>
-                <td>{{ m.purchase_price if m.purchase_price else '-' }} AFN</td>
+               <td>{{ m.purchase_price if m.purchase_price else '-' }} {{ t('purchase_price_afn') }}</td>
                 <td>
                     {% if m.source_type == 'local' and m.customer_name %}
                         {{ m.customer_name }}<br><small>{{ m.customer_phone }}</small>

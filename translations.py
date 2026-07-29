@@ -126,6 +126,9 @@ T = {
 'newest_first': 'Newest First',
 'oldest_first': 'Oldest First',
 'date_time': 'Date & Time',
+'purchase_price': 'Purchase Price',
+'purchase_price_label': 'Purchase Price (AFN)',
+'purchase_price_afn': 'AFN',
 'search_hint': 'Enter IMEI to search across all shops',
         'access_denied': 'Access denied.',
         'invalid_credentials': 'Invalid credentials',
@@ -266,6 +269,9 @@ T = {
 'newest_first': 'تر ټولو نوی لومړی',
 'oldest_first': 'تر ټولو زوړ لومړی',
 'date_time': 'نیټه او وخت',
+'purchase_price': 'د اخست قیمت',
+'purchase_price_label': 'د اخست قیمت (افغانۍ)',
+'purchase_price_afn': 'افغانۍ',
 
     },
     'fa': {
@@ -399,5 +405,8 @@ T = {
 'newest_first': 'جدیدترین اول',
 'oldest_first': 'قدیمی‌ترین اول',
 'date_time': 'تاریخ و زمان',
+'purchase_price': 'قیمت خرید',
+'purchase_price_label': 'قیمت خرید (افغانی)',
+'purchase_price_afn': 'افغانی',
     }
 }
