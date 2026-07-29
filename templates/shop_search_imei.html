@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block content %}
+<h3><i class="fas fa-search"></i> {{ t('search_imei') }}</h3>
+<div class="card"><div class="card-body">
+    <p class="text-muted">{{ t('imei_search_placeholder') }}</p>
+    <form method="POST" class="d-flex gap-2">
+        <input type="text" name="imei" class="form-control" placeholder="{{ t('enter_imei') }}" maxlength="15" required>
+        <button class="btn btn-primary">{{ t('check_now') }}</button>
+    </form>
+</div></div>
+
+{% if result %}
+<div class="card mt-4 border-{% if result.status == 'stolen' %}danger{% elif result.status == 'detected' %}warning{% else %}success{% endif %}">
+    <div class="card-header">
+        <h5>{{ t('search_result') }}</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <p><strong>{{ t('imei_status') }}:</strong> 
+                    <span class="badge bg-{% if result.status == 'stolen' %}danger{% elif result.status == 'detected' %}warning{% else %}success{% endif %}">
+                        {{ t(result.status) if result.status in ['active','stolen','detected'] else result.status }}
+                    </span>
+                </p>
+                <p><strong>{{ t('brand') }}:</strong> {{ result.brand }}</p>
+                <p><strong>{{ t('model') }}:</strong> {{ result.model }}</p>
+                <p><strong>{{ t('color') }}:</strong> {{ result.color if result.color else '-' }}</p>
+            </div>
+            <div class="col-md-6">
+                <p><strong>{{ t('registered_by') }}:</strong> {{ result.owner_shop.shop_name }}</p>
+                <p><strong>📍 Location:</strong> {{ result.owner_shop.location }}</p>
+                <p><strong>📅 Registered:</strong> {{ result.created_at.strftime('%Y-%m-%d') }}</p>
+            </div>
+        </div>
+        {% if result.status == 'stolen' %}
+            <div class="alert alert-danger mt-2">🚨 {{ t('stolen_warning') }}</div>
+        {% elif result.status == 'detected' %}
+            <div class="alert alert-warning mt-2">⚠️ This phone was detected at another shop. Contact admin.</div>
+        {% else %}
+            <div class="alert alert-success mt-2">✅ {{ t('clean') }}</div>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+{% endblock %}

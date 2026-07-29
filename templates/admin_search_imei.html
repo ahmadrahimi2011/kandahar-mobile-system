@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% block content %}
+<h3>🔍 {{ t('admin_search') }}</h3>
+<p class="text-muted">{{ t('search_hint') }}</p>
+<form method="POST" class="d-flex gap-2 mb-4">
+    <input type="text" name="imei" class="form-control" placeholder="{{ t('enter_imei') }}" maxlength="15" required>
+    <button class="btn btn-primary">{{ t('search_btn') }}</button>
+</form>
+
+{% if results %}
+    <div class="alert alert-info">
+        <i class="fas fa-info-circle"></i> 
+        {% if results|length > 1 %}
+            {{ t('multiple_records_found') }}
+        {% else %}
+            1 record found
+        {% endif %}
+        ({{ results|length }} records) - {{ t('newest_first') }}
+    </div>
+    
+    {% for mobile in results %}
+    <div class="card mb-3 border-{% if mobile.status == 'stolen' %}danger{% elif mobile.status == 'detected' %}warning{% else %}success{% endif %}">
+        <div class="card-header">
+            <strong>{{ t('record_owner') }}:</strong> {{ mobile.owner_shop.shop_name }}
+            <span class="badge bg-secondary float-end">
+                <i class="fas fa-clock"></i> {{ mobile.created_at.strftime('%Y-%m-%d %H:%M:%S') }}
+            </span>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4">
+                    <p><strong>IMEI 1:</strong> {{ mobile.imei1 }}</p>
+                    <p><strong>IMEI 2:</strong> {{ mobile.imei2 if mobile.imei2 else '-' }}</p>
+                    <p><strong>{{ t('status') }}:</strong> 
+                        <span class="badge bg-{% if mobile.status == 'stolen' %}danger{% elif mobile.status == 'detected' %}warning{% elif mobile.status == 'recovered' %}success{% else %}success{% endif %}">
+                            {{ mobile.status.upper() }}
+                        </span>
+                    </p>
+                    <p><strong>{{ t('source_type') }}:</strong> 
+                        {% if mobile.source_type == 'import' %}
+                            <span class="badge bg-info">📦 {{ t('imported') }}</span>
+                        {% else %}
+                            <span class="badge bg-secondary">🔄 {{ t('local') }}</span>
+                        {% endif %}
+                    </p>
+                </div>
+                <div class="col-md-4">
+                    <p><strong>{{ t('brand') }}:</strong> {{ mobile.brand }}</p>
+                    <p><strong>{{ t('model') }}:</strong> {{ mobile.model }}</p>
+                    <p><strong>{{ t('color') }}:</strong> {{ mobile.color if mobile.color else '-' }}</p>
+                    <p><strong>{{ t('registered_by') }}:</strong> {{ mobile.owner_shop.shop_name }}</p>
+                    <p><strong>📍 {{ t('location') }}:</strong> {{ mobile.owner_shop.location }}</p>
+                </div>
+                <div class="col-md-4">
+                    {% if mobile.source_type == 'local' and mobile.customer_name %}
+                    <h6>{{ t('customer_seller') }}:</h6>
+                    <p><strong>{{ t('seller_name') }}:</strong> {{ mobile.customer_name }}</p>
+                    <p><strong>{{ t('seller_phone') }}:</strong> {{ mobile.customer_phone }}</p>
+                    <p><strong>{{ t('tazkira_id') }}:</strong> {{ mobile.tazkira_number }}</p>
+                    
+                    {% if mobile.tazkira_photo %}
+                        <p><strong>{{ t('tazkira_photo_upload') }}:</strong><br>
+                        <a href="{{ mobile.tazkira_photo }}" target="_blank">
+    <img src="{{ mobile.tazkira_photo }}" alt="Tazkira" style="max-width:150px;">
+</a>
+                    {% endif %}
+                    
+                    {% if mobile.selfie_photo %}
+                        <p><strong>{{ t('selfie_photo') }}:</strong><br>
+                        <a href="/static/{{ mobile.selfie_photo }}" target="_blank">
+                            <img src="{{ mobile.selfie_photo }}" alt="Selfie" style="max-width:150px; border:1px solid #ccc; padding:5px; border-radius:5px;">s
+                    {% endif %}
+                    {% else %}
+                        <span class="text-muted">{{ t('imported') }}</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+    
+{% elif request.method == 'POST' %}
+    <div class="alert alert-info">{{ t('not_found_message') }}</div>
+{% endif %}
+{% endblock %}

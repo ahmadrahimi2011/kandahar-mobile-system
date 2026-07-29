@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+{% block content %}
+<h3><i class="fas fa-database"></i> {{ t('all_data') }}</h3>
+
+<!-- FILTER FORM -->
+<div class="card mb-4">
+    <div class="card-body">
+        <h5>{{ t('filter_results') }}</h5>
+        <form method="GET" action="/admin/all-mobiles" class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label">{{ t('filter_by_imei') }}</label>
+                <input type="text" name="imei" class="form-control" placeholder="e.g. 123456789" value="{{ filters.imei }}">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">{{ t('select_shop') }}</label>
+                <select name="shop_id" class="form-select">
+                    <option value="">All Shops</option>
+                    {% for shop in shops %}
+                        <option value="{{ shop.id }}" {% if filters.shop_id == shop.id|string %}selected{% endif %}>
+                            {{ shop.shop_name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">{{ t('brand') }}</label>
+                <input type="text" name="brand" class="form-control" placeholder="e.g. Samsung" value="{{ filters.brand }}">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">{{ t('select_status') }}</label>
+                <select name="status" class="form-select">
+                    <option value="">All</option>
+                    <option value="active" {% if filters.status == 'active' %}selected{% endif %}>Active</option>
+                    <option value="stolen" {% if filters.status == 'stolen' %}selected{% endif %}>Stolen</option>
+                    <option value="detected" {% if filters.status == 'detected' %}selected{% endif %}>Detected</option>
+                    <option value="recovered" {% if filters.status == 'recovered' %}selected{% endif %}>Recovered</option>
+                </select>
+            </div>
+            <div class="col-md-2 d-flex align-items-end gap-2">
+                <button class="btn btn-primary w-100">{{ t('search_btn') }}</button>
+                <a href="/admin/all-mobiles" class="btn btn-secondary w-100">{{ t('clear_filters') }}</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- RESULTS TABLE -->
+<div class="table-responsive">
+    <table class="table table-striped table-bordered">
+        <thead class="table-dark">
+            <tr>
+                <th>IMEI</th>
+                <th>{{ t('source_type') }}</th>
+                <th>{{ t('shop_name') }}</th>
+                <th>{{ t('brand') }}/{{ t('model') }}</th>
+                <th>{{ t('customer_seller') }}</th>
+                <th>{{ t('tazkira_id') }}</th>
+                <th>{{ t('selfie_photo') }}</th>
+                <th>{{ t('status') }}</th>
+                <th>{{ t('added_date') }}</th>
+                <th>{{ t('actions') }}</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% if mobiles %}
+            {% for m in mobiles %}
+            <tr>
+                <td>{{ m.imei1 }}</td>
+                <td>
+                    {% if m.source_type == 'import' %}
+                        <span class="badge bg-info">📦 {{ t('imported') }}</span>
+                    {% else %}
+                        <span class="badge bg-secondary">🔄 {{ t('local') }}</span>
+                    {% endif %}
+                </td>
+                <td>{{ m.owner_shop.shop_name }}</td>
+                <td>{{ m.brand }} {{ m.model }}</td>
+                <td>
+                    {% if m.source_type == 'local' and m.customer_name %}
+                        {{ m.customer_name }}<br><small>{{ m.customer_phone }}</small>
+                    {% else %}
+                        <span class="text-muted">-</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if m.tazkira_number %}
+                        {{ m.tazkira_number }}
+                        {% if m.tazkira_photo %}
+                            <br><a href="{{ m.tazkira_photo }}" target="_blank">📷 View</a>
+                        {% endif %}
+                    {% else %}
+                        -
+                    {% endif %}
+                </td>
+                <td>
+    {% if m.selfie_photo %}
+        <a href="{{ m.selfie_photo }}" target="_blank">
+            <img src="{{ m.selfie_photo }}" alt="Selfie" style="width:40px; height:40px; object-fit:cover; border-radius:5px; border:1px solid #ccc;">
+        </a>
+    {% else %}
+        -
+    {% endif %}
+</td>
+                <td>
+                    <span class="badge bg-{% if m.status == 'stolen' %}danger{% elif m.status == 'detected' %}warning{% elif m.status == 'recovered' %}success{% else %}success{% endif %}">
+                        {{ m.status.upper() }}
+                    </span>
+                </td>
+                <td><small>{{ m.created_at.strftime('%Y-%m-%d %H:%M') }}</small></td>
+                <td>
+                    {% if m.status == 'active' %}
+                    <form method="POST" action="/admin/report-stolen/{{ m.id }}" onsubmit="return confirm('Are you sure?');" style="display:inline;">
+                        <input type="text" name="description" placeholder="Reason" class="form-control form-control-sm" style="width:80px; display:inline;" required>
+                        <button class="btn btn-sm btn-danger"><i class="fas fa-exclamation-triangle"></i></button>
+                    </form>
+                    {% elif m.status == 'stolen' or m.status == 'detected' %}
+                    <form method="POST" action="/admin/recover-mobile/{{ m.id }}" onsubmit="return confirm('Confirm recovery?');" style="display:inline;">
+                        <button class="btn btn-sm btn-success"><i class="fas fa-check-circle"></i></button>
+                    </form>
+                    {% endif %}
+                    <form method="POST" action="/admin/delete-mobile/{{ m.id }}" onsubmit="return confirm('{{ t('confirm_delete_record') }}');" style="display:inline;">
+                        <button class="btn btn-sm btn-danger"><i class="fas fa-trash"></i></button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        {% else %}
+            <tr>
+                <td colspan="10" class="text-center text-muted">{{ t('no_records_found') }}</td>
+            </tr>
+        {% endif %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

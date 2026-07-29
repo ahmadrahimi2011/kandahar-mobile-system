@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block content %}
+<h3><i class="fas fa-mobile-alt"></i> {{ t('add_mobile') }}</h3>
+<div class="card"><div class="card-body">
+    <form method="POST" enctype="multipart/form-data">
+        <div class="mb-3">
+            <label class="form-label">{{ t('source_type') }} *</label>
+            <div class="d-flex gap-4">
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="source_type" id="source_import" value="import" checked>
+                    <label class="form-check-label" for="source_import">📦 {{ t('import_source') }}</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="source_type" id="source_local" value="local">
+                    <label class="form-check-label" for="source_local">👤 {{ t('local_purchase') }}</label>
+                </div>
+            </div>
+            <small class="text-muted">{{ t('customer_data_required') }}</small>
+        </div>
+        <hr>
+        <h5>📱 Mobile Details</h5>
+        <div class="row">
+            <div class="col-md-6 mb-3"><label>IMEI 1 *</label><input class="form-control" name="imei1" maxlength="15" required></div>
+            <div class="col-md-6 mb-3"><label>IMEI 2</label><input class="form-control" name="imei2" maxlength="15"></div>
+        </div>
+        <div class="row">
+            <div class="col-md-4 mb-3"><label>{{ t('color') }}</label><input class="form-control" name="color"></div>
+            <div class="col-md-4 mb-3"><label>{{ t('brand') }}</label><input class="form-control" name="brand"></div>
+            <div class="col-md-4 mb-3"><label>{{ t('model') }}</label><input class="form-control" name="model"></div>
+        </div>
+
+        <div id="customerSection" style="display: none;">
+            <hr><h5>👤 {{ t('customer_seller') }}</h5>
+            <div class="row">
+                <div class="col-md-6 mb-3"><label>{{ t('seller_name') }} *</label><input class="form-control" name="customer_name"></div>
+                <div class="col-md-6 mb-3"><label>{{ t('seller_phone') }} *</label><input class="form-control" name="customer_phone"></div>
+            </div>
+            <div class="row">
+                <div class="col-md-6 mb-3"><label>{{ t('tazkira_id') }} *</label><input class="form-control" name="tazkira_number"></div>
+                <div class="col-md-6 mb-3"><label>{{ t('tazkira_photo_upload') }}</label><input class="form-control" type="file" name="tazkira_photo" accept="image/*"></div>
+            </div>
+            <!-- ✅ SELFIE PHOTO INPUT -->
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label>{{ t('selfie_photo') }}</label>
+                    <input class="form-control" type="file" name="selfie_photo" accept="image/*">
+                    <small class="text-muted">{{ t('upload_selfie') }}</small>
+                </div>
+            </div>
+        </div>
+
+        <button class="btn btn-primary w-100 mt-3"><i class="fas fa-save"></i> {{ t('add_btn') }}</button>
+    </form>
+</div></div>
+<script>
+    document.querySelectorAll('input[name="source_type"]').forEach(e => {
+        e.addEventListener("change", function() {
+            const sec = document.getElementById('customerSection');
+            if (document.getElementById('source_local').checked) {
+                sec.style.display = 'block';
+                sec.querySelectorAll('input').forEach(i => { if(i.name !== 'tazkira_photo' && i.name !== 'selfie_photo') i.required = true; });
+            } else {
+                sec.style.display = 'none';
+                sec.querySelectorAll('input').forEach(i => i.required = false);
+            }
+        });
+    });
+</script>
+{% endblock %}

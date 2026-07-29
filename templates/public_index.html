@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow">
+            <div class="card-body text-center">
+                <h3><i class="fas fa-search"></i> {{ t('check_imei') }}</h3>
+                <p class="text-muted">{{ t('enter_imei') }}</p>
+                <form method="POST" action="/check-imei">
+                    <div class="input-group mb-3">
+                        <input type="text" name="imei" class="form-control" placeholder="{{ t('enter_imei') }}" maxlength="15" required>
+                        <button class="btn btn-primary" type="submit">{{ t('check_now') }}</button>
+                    </div>
+                </form>
+                <hr>
+                <div class="row">
+                    <div class="col"><span>{{ t('total_phones') }}: <strong>{{ total_mobiles }}</strong></span></div>
+                    <div class="col text-danger"><span>{{ t('stolen_reported') }}: <strong>{{ stolen_count }}</strong></span></div>
+                </div>
+                <div class="mt-3">
+                    <!-- Register link hata kar yeh message daala -->
+                    <small><a href="/shop/login">{{ t('shop_login') }}</a> | <span class="text-muted">{{ t('contact_admin') }}</span></small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

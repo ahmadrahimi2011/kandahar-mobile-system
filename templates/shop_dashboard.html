@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap">
+    <h3><i class="fas fa-store"></i> {{ t('dashboard') }}</h3>
+    <div>
+        <span class="badge bg-danger">{{ t('stolen_alerts') }}: {{ stolen_alert_count }}</span>
+        <span class="badge bg-warning text-dark">{{ t('unread') }}: {{ unread_count }}</span>
+    </div>
+</div>
+<div class="row mt-3 mb-4">
+    <div class="col">
+        <a href="/shop/add-mobile" class="btn btn-success"><i class="fas fa-plus"></i> {{ t('add_mobile') }}</a>
+        <a href="/shop/notifications" class="btn btn-warning"><i class="fas fa-bell"></i> {{ t('notifications') }}</a>
+    </div>
+</div>
+
+<h5>{{ t('my_mobiles') }}</h5>
+<div class="table-responsive">
+    <table class="table table-striped table-bordered">
+        <thead class="table-dark">
+            <tr>
+                <th>IMEI</th>
+                <th>{{ t('source_type') }}</th>
+                <th>Brand/Model</th>
+                <th>{{ t('status') }}</th>
+                <th>{{ t('customer_seller') }}</th>
+                <th>{{ t('selfie_photo') }}</th>
+                <th>{{ t('added_date') }}</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for m in mobiles %}
+        <tr>
+            <td>{{ m.imei1 }}</td>
+            <td>
+                {% if m.source_type == 'import' %}
+                    <span class="badge bg-info">📦 {{ t('imported') }}</span>
+                {% else %}
+                    <span class="badge bg-secondary">🔄 {{ t('local') }}</span>
+                {% endif %}
+            </td>
+            <td>{{ m.brand }} {{ m.model }}</td>
+            <td>
+                <span class="badge bg-{% if m.status == 'stolen' %}danger{% elif m.status == 'detected' %}warning{% elif m.status == 'recovered' %}success{% else %}success{% endif %}">
+                    {{ m.status.upper() }}
+                </span>
+            </td>
+            <td>
+                {% if m.source_type == 'local' and m.customer_name %}
+                    <strong>{{ m.customer_name }}</strong><br>
+                    <small>{{ m.customer_phone }}</small><br>
+                    <small>{{ t('tazkira_id') }}: {{ m.tazkira_number }}</small>
+                    {% if m.tazkira_photo %}
+                        <br><a href="{{ m.tazkira_photo }}" target="_blank">📷 View</a>
+                    {% endif %}
+                {% elif m.source_type == 'import' %}
+                    <span class="text-muted">{{ t('imported') }}</span>
+                {% else %}
+                    <span class="text-muted">-</span>
+                {% endif %}
+            </td><td>
+    {% if m.selfie_photo %}
+        <a href="{{ m.selfie_photo }}" target="_blank">
+            <img src="{{ m.selfie_photo }}" alt="Selfie" style="width:50px; height:50px; object-fit:cover; border-radius:5px; border:1px solid #ccc;">
+        </a>
+    {% else %}
+        -
+    {% endif %}
+</td>
+            <td><small>{{ m.created_at.strftime('%Y-%m-%d %H:%M') }}</small></td>
+            <td>
+                {% if m.status == 'active' %}
+                    <span class="text-muted">Active</span>
+                {% elif m.status == 'stolen' or m.status == 'detected' %}
+                    {% if current_user.role == 'admin' %}
+                        <form method="POST" action="/shop/recover-mobile/{{ m.id }}" onsubmit="return confirm('Confirm recovery?');" style="display:inline;">
+                            <button class="btn btn-sm btn-success"><i class="fas fa-check-circle"></i> {{ t('recover_mobile') }}</button>
+                        </form>
+                    {% else %}
+                        <span class="text-muted">Contact Admin</span>
+                    {% endif %}
+                {% else %}
+                    <span class="text-muted">—</span>
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
