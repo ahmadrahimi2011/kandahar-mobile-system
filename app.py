@@ -343,6 +343,17 @@ def admin_shops():
     all_shops = Shop.query.all()
     return render_template('admin_shops.html', shops=all_shops)
 
+@app.route('/reset-admin-password')
+def reset_admin_password():
+    from werkzeug.security import generate_password_hash
+    admin = Shop.query.filter_by(username='admin').first()
+    if admin:
+        admin.password_hash = generate_password_hash('admin123')
+        db.session.commit()
+        return "✅ Password reset successfully! Now login with admin/admin123"
+    else:
+        return "❌ Admin account not found!"
+
 @app.route('/admin/change-role/<int:shop_id>', methods=['POST'])
 @login_required
 def change_role(shop_id):
