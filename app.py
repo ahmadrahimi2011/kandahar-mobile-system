@@ -383,19 +383,23 @@ def manifest():
         "name": "Kandahar Mobile System",
         "short_name": "Kandahar Mobile",
         "start_url": "/",
-        "display": "standalone",
+        "display": "standalone",   # Yeh full screen ke liye zaroori hai
+        "orientation": "portrait",
+        "scope": "/",
         "background_color": "#1a3a5c",
         "theme_color": "#1a3a5c",
         "icons": [
             {
                 "src": "/static/icon-192.png",
                 "sizes": "192x192",
-                "type": "image/png"
+                "type": "image/png",
+                "purpose": "any maskable"
             },
             {
                 "src": "/static/icon-512.png",
                 "sizes": "512x512",
-                "type": "image/png"
+                "type": "image/png",
+                "purpose": "any maskable"
             }
         ]
     }
