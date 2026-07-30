@@ -2,28 +2,49 @@
 <html lang="{{ current_lang }}">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
     <title>{{ t('app_name') }}</title>
-<!-- PWA Manifest & Meta Tags -->
-<link rel="manifest" href="/manifest.json">
-<meta name="theme-color" content="#1a3a5c">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#1a3a5c">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    
     <style>
-        /* ---------- GLOBAL VARIABLES ---------- */
+        /* ---------- GLOBAL ---------- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        html, body {
+            overflow-x: hidden !important;
+            width: 100%;
+            max-width: 100%;
+            background-color: var(--bg-body-light);
+            color: var(--text-body-light);
+            transition: background 0.3s ease, color 0.3s ease;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .container, .container-fluid {
+            width: 100%;
+            max-width: 100%;
+            padding-left: 8px;
+            padding-right: 8px;
+        }
+        
+        /* ---------- COLORS ---------- */
         :root {
             --primary-blue: #1a3a5c;
             --gold: #d4a02b;
-            --gold-hover: #e8b83a;
-            
             --bg-body-light: #f0f2f6;
             --text-body-light: #1e2a3a;
             --bg-card-light: #ffffff;
             --border-light: #dce1e8;
             --bg-nav-light: var(--primary-blue);
-            --text-nav-light: #ffffff;
             
             --bg-body-dark: #0f1a2b;
             --text-body-dark: #eaf0f8;
@@ -31,49 +52,150 @@
             --bg-input-dark: #2a4058;
             --border-dark: #3a5570;
             --bg-nav-dark: #1a2d42;
-            --text-nav-dark: #ffffff;
         }
 
-        body {
-            background-color: var(--bg-body-light);
-            color: var(--text-body-light);
-            transition: background 0.3s ease, color 0.3s ease;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        body.dark-mode {
+            background-color: var(--bg-body-dark) !important;
+            color: var(--text-body-dark) !important;
         }
-        .card {
-            background-color: var(--bg-card-light) !important;
-            border: 1px solid var(--border-light) !important;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+        body.dark-mode .card {
+            background-color: var(--bg-card-dark) !important;
+            border-color: var(--border-dark) !important;
         }
+        body.dark-mode .navbar-custom {
+            background: var(--bg-nav-dark) !important;
+        }
+        body.dark-mode .table {
+            color: var(--text-body-dark) !important;
+        }
+        body.dark-mode .table-striped > tbody > tr:nth-of-type(odd) {
+            background-color: rgba(255, 255, 255, 0.05) !important;
+        }
+        body.dark-mode .form-control {
+            background-color: var(--bg-input-dark) !important;
+            color: var(--text-body-dark) !important;
+            border-color: var(--border-dark) !important;
+        }
+        body.dark-mode .form-control::placeholder {
+            color: #8899aa !important;
+        }
+        body.dark-mode .text-muted {
+            color: #a0b8d0 !important;
+        }
+        body.dark-mode footer {
+            border-top-color: var(--border-dark) !important;
+            color: #a0b8d0 !important;
+        }
+
+        /* ---------- NAVBAR ---------- */
         .navbar-custom {
             background: var(--bg-nav-light) !important;
             border-bottom: 3px solid var(--gold);
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
         .navbar-custom .navbar-brand,
         .navbar-custom .nav-link,
         .navbar-custom .navbar-text {
-            color: var(--text-nav-light) !important;
+            color: #ffffff !important;
             font-weight: 500;
         }
         .navbar-custom .nav-link:hover {
             color: var(--gold) !important;
         }
-        .table thead {
+        .lang-btn {
+            background: transparent;
+            border: 1px solid rgba(255,255,255,0.4);
+            color: #fff;
+            padding: 2px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 0 2px;
+            text-decoration: none;
+            font-size: 0.8rem;
+            transition: 0.2s;
+        }
+        .lang-btn:hover, .lang-btn.active {
+            background-color: var(--gold);
+            border-color: var(--gold);
+            color: #1a1a1a;
+        }
+        .dark-toggle-btn {
+            background: rgba(255,255,255,0.12);
+            border: 1px solid rgba(255,255,255,0.4);
+            color: #fff;
+            padding: 5px 12px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: 0.2s;
+            font-size: 0.85rem;
+        }
+        .dark-toggle-btn:hover {
+            background: rgba(255,255,255,0.25);
+        }
+        body.dark-mode .dark-toggle-btn {
+            background: rgba(255,255,255,0.1);
+            border-color: rgba(255,255,255,0.5);
+            color: #fff;
+        }
+        body.dark-mode .dark-toggle-btn:hover {
+            background: rgba(255,255,255,0.25);
+        }
+
+        /* ---------- CARDS ---------- */
+        .card {
+            background-color: var(--bg-card-light) !important;
+            border: 1px solid var(--border-light) !important;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+        }
+
+        /* ---------- TABLE FIX (FINAL) ---------- */
+        .table-container {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            margin: 0;
+            padding: 0;
+        }
+        .table-container table {
+            width: 100%;
+            min-width: 750px;
+            margin-bottom: 0;
+            font-size: 13px;
+            border-collapse: collapse;
+        }
+        .table-container table th,
+        .table-container table td {
+            padding: 8px 10px;
+            white-space: nowrap;
+            vertical-align: middle;
+            border: 1px solid #dee2e6;
+        }
+        .table-container table th {
             background-color: var(--primary-blue);
             color: #ffffff;
+            font-weight: 600;
         }
-        .table-striped > tbody > tr:nth-of-type(odd) {
-            background-color: rgba(0, 0, 0, 0.03);
+        body.dark-mode .table-container table th {
+            background-color: #0b1a2e;
+            color: #ffffff;
         }
+        body.dark-mode .table-container table td {
+            border-color: var(--border-dark);
+        }
+        .table-container .actions-cell {
+            min-width: 120px;
+        }
+        .table-container .imei-cell {
+            min-width: 130px;
+        }
+
+        /* ---------- BUTTONS ---------- */
         .btn-primary {
             background-color: var(--primary-blue);
             border-color: var(--primary-blue);
         }
         .btn-primary:hover {
             background-color: #0d2640;
-            border-color: #0d2640;
         }
         .btn-success {
             background-color: #1f7b4a;
@@ -89,259 +211,47 @@
         .btn-danger:hover {
             background-color: #a93226;
         }
-        footer {
-            border-top: 1px solid var(--border-light);
-            padding-top: 20px;
-            color: #6c757d;
-        }
-
-        /* DARK MODE */
-        body.dark-mode {
-            background-color: var(--bg-body-dark) !important;
-            color: var(--text-body-dark) !important;
-        }
-        body.dark-mode .card,
-        body.dark-mode .modal-content {
-            background-color: var(--bg-card-dark) !important;
-            border: 1px solid var(--border-dark) !important;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
-        }
-        body.dark-mode .card-body,
-        body.dark-mode .card-header,
-        body.dark-mode .card-footer {
-            background-color: var(--bg-card-dark) !important;
-        }
-        body.dark-mode .navbar-custom {
-            background: var(--bg-nav-dark) !important;
-            border-bottom: 3px solid var(--gold);
-        }
-        body.dark-mode .navbar-custom .navbar-brand,
-        body.dark-mode .navbar-custom .nav-link,
-        body.dark-mode .navbar-custom .navbar-text {
-            color: var(--text-nav-dark) !important;
-        }
-        body.dark-mode .navbar-custom .nav-link:hover {
-            color: var(--gold) !important;
-        }
-        body.dark-mode .table {
-            color: var(--text-body-dark) !important;
-            border-color: var(--border-dark) !important;
-        }
-        body.dark-mode .table thead {
-            background-color: #0b1a2e;
-            color: #ffffff;
-        }
-        body.dark-mode .table-striped > tbody > tr:nth-of-type(odd) {
-            background-color: rgba(255, 255, 255, 0.05) !important;
-        }
-        body.dark-mode .table-striped > tbody > tr:hover {
-            background-color: rgba(255, 255, 255, 0.08) !important;
-        }
-        body.dark-mode .table-bordered {
-            border-color: var(--border-dark) !important;
-        }
-        body.dark-mode .table-bordered td,
-        body.dark-mode .table-bordered th {
-            border-color: var(--border-dark) !important;
-        }
-        body.dark-mode .form-control,
-        body.dark-mode .form-select,
-        body.dark-mode .input-group-text {
-            background-color: var(--bg-input-dark) !important;
-            color: var(--text-body-dark) !important;
-            border: 1px solid var(--border-dark) !important;
-        }
-        body.dark-mode .form-control:focus {
-            background-color: #1f3a55 !important;
-            color: #ffffff !important;
-            border-color: var(--gold) !important;
-            box-shadow: 0 0 0 0.25rem rgba(212, 160, 43, 0.3) !important;
-        }
-        body.dark-mode .form-control::placeholder {
-            color: #8899aa !important;
-        }
-        body.dark-mode .form-label {
-            color: var(--text-body-dark) !important;
-        }
         body.dark-mode .btn-primary {
             background-color: #2a5a8a !important;
             border-color: #2a5a8a !important;
-            color: #fff !important;
-        }
-        body.dark-mode .btn-primary:hover {
-            background-color: #3a7aaa !important;
         }
         body.dark-mode .btn-success {
             background-color: #2a7a4a !important;
             border-color: #2a7a4a !important;
         }
-        body.dark-mode .btn-success:hover {
-            background-color: #3a9a5a !important;
-        }
         body.dark-mode .btn-danger {
             background-color: #8a2a2a !important;
             border-color: #8a2a2a !important;
         }
-        body.dark-mode .btn-danger:hover {
-            background-color: #aa3a3a !important;
-        }
-        body.dark-mode .btn-warning {
-            background-color: #c99a2a !important;
-            border-color: #c99a2a !important;
-            color: #1a1a1a !important;
-        }
-        body.dark-mode .btn-warning:hover {
-            background-color: #dbaa3a !important;
-        }
-        body.dark-mode .alert {
-            background-color: var(--bg-card-dark) !important;
-            color: var(--text-body-dark) !important;
-            border-color: var(--border-dark) !important;
-        }
-        body.dark-mode .alert-danger {
-            background-color: #3a1a1a !important;
-            border-color: #7a2a2a !important;
-        }
-        body.dark-mode .alert-success {
-            background-color: #1a3a2a !important;
-            border-color: #2a7a4a !important;
-        }
-        body.dark-mode .alert-warning {
-            background-color: #3a3a1a !important;
-            border-color: #7a6a2a !important;
-            color: #f0e6b0 !important;
-        }
-        body.dark-mode .alert-info {
-            background-color: #1a2a4a !important;
-            border-color: #2a5a8a !important;
-        }
-        body.dark-mode .text-muted {
-            color: #a0b8d0 !important;
-        }
-        body.dark-mode footer {
-            border-top-color: var(--border-dark) !important;
-            color: #a0b8d0 !important;
-        }
-        body.dark-mode .navbar-toggler {
-            border-color: rgba(255, 255, 255, 0.4) !important;
-        }
-        body.dark-mode .navbar-toggler-icon {
-            filter: invert(1) brightness(100%);
-        }
-        body.dark-mode .navbar-collapse {
-            background-color: var(--bg-nav-dark);
-            padding: 12px;
-            border-radius: 8px;
-            margin-top: 6px;
-        }
-        body.dark-mode a:not(.nav-link):not(.btn):not(.lang-btn) {
-            color: var(--gold);
-        }
-        body.dark-mode a:not(.nav-link):not(.btn):not(.lang-btn):hover {
-            color: var(--gold-hover);
-        }
 
-        .lang-btn {
-            background: transparent;
-            border: 1px solid rgba(255, 255, 255, 0.4);
-            color: #fff;
-            padding: 2px 10px;
-            border-radius: 5px;
-            cursor: pointer;
-            margin: 0 2px;
-            text-decoration: none;
-            font-size: 0.85rem;
-            transition: 0.2s;
-        }
-        .lang-btn:hover, .lang-btn.active {
-            background-color: var(--gold);
-            border-color: var(--gold);
-            color: #1a1a1a;
-        }
-        body.dark-mode .lang-btn {
-            border-color: rgba(255, 255, 255, 0.5);
-            color: #fff;
-        }
-        body.dark-mode .lang-btn:hover,
-        body.dark-mode .lang-btn.active {
-            background-color: var(--gold);
-            border-color: var(--gold);
-            color: #1a1a1a;
-        }
-
-        .dark-toggle-btn {
-            background: rgba(255, 255, 255, 0.12);
-            border: 1px solid rgba(255, 255, 255, 0.4);
-            color: #fff;
-            padding: 5px 14px;
-            border-radius: 20px;
-            cursor: pointer;
-            transition: 0.2s;
-            font-size: 0.9rem;
-        }
-        .dark-toggle-btn:hover {
-            background: rgba(255, 255, 255, 0.25);
-        }
-        body.dark-mode .dark-toggle-btn {
-            background: rgba(255, 255, 255, 0.1);
-            border-color: rgba(255, 255, 255, 0.5);
-            color: #fff;
-        }
-        body.dark-mode .dark-toggle-btn:hover {
-            background: rgba(255, 255, 255, 0.25);
-        }
-
-        .action-form {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            align-items: center;
-        }
-        .action-form .form-control-sm {
-            width: 140px;
-            min-width: 100px;
-            flex: 1 1 auto;
-        }
-        .action-form .btn {
-            white-space: nowrap;
-        }
-        @media (max-width: 768px) {
-            .action-form .form-control-sm {
-                width: 100%;
+        /* ---------- RESPONSIVE ---------- */
+        @media (max-width: 576px) {
+            .container, .container-fluid {
+                padding-left: 4px;
+                padding-right: 4px;
+            }
+            .table-container table {
+                font-size: 11px;
+            }
+            .table-container table th,
+            .table-container table td {
+                padding: 4px 6px;
+            }
+            .btn-sm {
+                font-size: 10px;
+                padding: 2px 6px;
+            }
+            .action-form input {
+                width: 60px !important;
+                font-size: 10px;
             }
         }
-        /* Badge Styling */
-        #notif-badge {
-            position: relative;
-            top: -2px;
-            font-size: 0.6rem;
-            padding: 2px 6px;
-            border-radius: 50%;
-            background-color: #dc3545;
-            color: white;
-            margin-left: 4px;
-        }
-/* ---------- FIX SIDE SCROLL ON MOBILE ---------- */
-* {
-    box-sizing: border-box;
-}
-html, body {
-    overflow-x: hidden;
-    max-width: 100%;
-}
-.container {
-    padding-left: 10px;
-    padding-right: 10px;
-}
-.table-responsive {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-}
     </style>
 </head>
+
 <body>
     <nav class="navbar navbar-expand-lg navbar-custom">
-        <div class="container">
+        <div class="container-fluid">
             <a class="navbar-brand" href="/">{{ t('app_name') }}</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
@@ -352,18 +262,13 @@ html, body {
                     {% if current_user.is_authenticated %}
                         <li class="nav-item"><a class="nav-link" href="/shop/dashboard">{{ t('dashboard') }}</a></li>
                         <li class="nav-item"><a class="nav-link" href="/shop/add-mobile">{{ t('add_mobile') }}</a></li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="/shop/notifications" style="position:relative;">
-                                <i class="fas fa-bell"></i> {{ t('notifications') }}
-                                <span id="notif-badge" style="display:none;">0</span>
-                            </a>
-                        </li>
+                        <li class="nav-item"><a class="nav-link" href="/shop/notifications">{{ t('notifications') }}</a></li>
                         <li class="nav-item"><a class="nav-link" href="/shop/change-password"><i class="fas fa-key"></i> {{ t('change_password') }}</a></li>
                         {% if current_user.role == 'admin' %}
                             <li class="nav-item"><a class="nav-link" href="/admin/all-mobiles"><i class="fas fa-database"></i> {{ t('all_data') }}</a></li>
-<li class="nav-item"><a class="nav-link" href="/admin/search-imei"><i class="fas fa-search"></i> {{ t('admin_search') }}</a></li>
-<li class="nav-item"><a class="nav-link" href="/admin/shops"><i class="fas fa-users-cog"></i> {{ t('manage_users') }}</a></li>
-<li class="nav-item"><a class="nav-link" href="/admin/suspicious-shops"><i class="fas fa-exclamation-triangle"></i> {{ t('suspicious') }}</a></li>
+                            <li class="nav-item"><a class="nav-link" href="/admin/search-imei"><i class="fas fa-search"></i> {{ t('admin_search') }}</a></li>
+                            <li class="nav-item"><a class="nav-link" href="/admin/shops"><i class="fas fa-users-cog"></i> {{ t('manage_users') }}</a></li>
+                            <li class="nav-item"><a class="nav-link" href="/admin/suspicious-shops"><i class="fas fa-exclamation-triangle"></i> {{ t('suspicious') }}</a></li>
                         {% endif %}
                         <li class="nav-item"><a class="nav-link" href="/shop/logout">{{ t('logout') }}</a></li>
                     {% else %}
@@ -371,20 +276,17 @@ html, body {
                     {% endif %}
                 </ul>
 
-                <!-- USERNAME -->
                 {% if current_user.is_authenticated %}
                 <span class="navbar-text text-white me-3">
                     <i class="fas fa-user-circle"></i> {{ current_user.shop_name }} ({{ current_user.username }})
                 </span>
                 {% endif %}
 
-                <!-- LANGUAGE -->
                 <span class="navbar-text me-2" style="color: #ddd;">{{ t('switch_lang') }}:</span>
                 <a href="?lang=en" class="lang-btn {% if current_lang == 'en' %}active{% endif %}">🇬🇧 EN</a>
                 <a href="?lang=ps" class="lang-btn {% if current_lang == 'ps' %}active{% endif %}">🇦🇫 پښتو</a>
                 <a href="?lang=fa" class="lang-btn {% if current_lang == 'fa' %}active{% endif %}">🇦🇫 دری</a>
 
-                <!-- DARK MODE -->
                 <button id="darkModeToggle" class="dark-toggle-btn ms-3">
                     <i class="fas fa-moon"></i> <span id="modeLabel">{{ t('dark_mode') }}</span>
                 </button>
@@ -392,7 +294,7 @@ html, body {
         </div>
     </nav>
 
-    <div class="container mt-4">
+    <div class="container-fluid mt-2">
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
                 {% for cat, msg in messages %}
@@ -403,14 +305,14 @@ html, body {
             {% endif %}
         {% endwith %}
         {% block content %}{% endblock %}
-        <footer class="mt-5 text-center">
-            Kandahar Mobile System © 2026
+        <footer class="mt-4 text-center text-muted small">
+            <p>{{ t('demo_creds') }}</p>
         </footer>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // ---------- DARK MODE ----------
+        // DARK MODE
         const toggle = document.getElementById('darkModeToggle');
         const modeLabel = document.getElementById('modeLabel');
         const body = document.body;
@@ -432,106 +334,18 @@ html, body {
             }
         });
 
-        // ---------- NOTIFICATION SOUND (Beep) ----------
-        function playBeep() {
-            try {
-                let ctx = new (window.AudioContext || window.webkitAudioContext)();
-                let oscillator = ctx.createOscillator();
-                let gainNode = ctx.createGain();
-                oscillator.connect(gainNode);
-                gainNode.connect(ctx.destination);
-                oscillator.frequency.value = 880;
-                oscillator.type = 'sine';
-                gainNode.gain.setValueAtTime(0.3, ctx.currentTime);
-                oscillator.start(ctx.currentTime);
-                oscillator.stop(ctx.currentTime + 0.25);
-            } catch(e) {
-                console.log('Audio error');
-            }
-        }
-
-        // ---------- BROWSER POPUP NOTIFICATION ----------
-        function showBrowserNotification(title, body) {
-            if (!("Notification" in window)) {
-                return;
-            }
-            if (Notification.permission === "granted") {
-                new Notification(title, { body: body, icon: 'https://img.icons8.com/color/48/000000/mobile-phone.png' });
-            } else if (Notification.permission !== "denied") {
-                Notification.requestPermission().then(permission => {
-                    if (permission === "granted") {
-                        new Notification(title, { body: body, icon: 'https://img.icons8.com/color/48/000000/mobile-phone.png' });
-                    }
-                });
-            }
-        }
-
-        // ---------- POLLING (Har 15 sec) ----------
-        let lastCount = 0;
-        let isFirstRun = true;
-        const t_title = "{{ t('new_notification_title') }}";
-        const t_body = "{{ t('new_notification_body') }}";
-
-        function checkNotifications() {
-            fetch('/api/unread-count')
-            .then(response => response.json())
-            .then(data => {
-                let currentCount = data.count;
-                let badge = document.getElementById('notif-badge');
-                if (badge) {
-                    if (currentCount > 0) {
-                        badge.innerText = currentCount;
-                        badge.style.display = 'inline';
-                    } else {
-                        badge.style.display = 'none';
-                    }
-                }
-                // Tab title update
-                let titlePrefix = currentCount > 0 ? `(${currentCount}) ` : '';
-                document.title = titlePrefix + '📱 Kandahar Mobile System';
-
-                if (currentCount > lastCount && !isFirstRun) {
-                    playBeep();
-                    let shopName = "{{ current_user.shop_name if current_user.is_authenticated else 'User' }}";
-                    let titleMsg = t_title.replace('{shop}', shopName);
-                    let bodyMsg = t_body.replace('{count}', currentCount - lastCount);
-                    showBrowserNotification(titleMsg, bodyMsg);
-                }
-                isFirstRun = false;
-                lastCount = currentCount;
-            })
-            .catch(err => console.log('Polling error:', err));
-        }
-
-        // ---------- INIT ----------
-        window.onload = function() {
-            fetch('/api/unread-count')
-            .then(r => r.json())
-            .then(data => {
-                lastCount = data.count;
-                let badge = document.getElementById('notif-badge');
-                if (badge && lastCount > 0) {
-                    badge.innerText = lastCount;
-                    badge.style.display = 'inline';
-                    document.title = `(${lastCount}) 📱 Kandahar Mobile System`;
-                }
+        // PWA SERVICE WORKER
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(function(reg) {
+                        console.log('✅ Service Worker registered!');
+                    })
+                    .catch(function(err) {
+                        console.log('❌ Service Worker failed:', err);
+                    });
             });
-            setInterval(checkNotifications, 15000);
-        };
+        }
     </script>
 </body>
 </html>
-<!-- PWA Service Worker Registration -->
-<script>
-    if ('serviceWorker' in navigator) {
-        window.addEventListener('load', function() {
-            navigator.serviceWorker.register('/sw.js')
-                .then(function(registration) {
-                    console.log('Service Worker registered successfully!');
-                })
-                .catch(function(error) {
-                    console.log('Service Worker registration failed:', error);
-                });
-        });
-    }
-</script>

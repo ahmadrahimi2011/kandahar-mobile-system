@@ -3,32 +3,26 @@
 <h3><i class="fas fa-database"></i> {{ t('all_data') }}</h3>
 
 <!-- FILTER FORM -->
-<div class="card mb-4">
+<div class="card mb-3">
     <div class="card-body">
         <h5>{{ t('filter_results') }}</h5>
-        <form method="GET" action="/admin/all-mobiles" class="row g-3">
+        <form method="GET" action="/admin/all-mobiles" class="row g-2">
             <div class="col-md-3">
-                <label class="form-label">{{ t('filter_by_imei') }}</label>
-                <input type="text" name="imei" class="form-control" placeholder="e.g. 123456789" value="{{ filters.imei }}">
+                <input type="text" name="imei" class="form-control form-control-sm" placeholder="IMEI" value="{{ filters.imei }}">
             </div>
             <div class="col-md-3">
-                <label class="form-label">{{ t('select_shop') }}</label>
-                <select name="shop_id" class="form-select">
+                <select name="shop_id" class="form-select form-select-sm">
                     <option value="">All Shops</option>
                     {% for shop in shops %}
-                        <option value="{{ shop.id }}" {% if filters.shop_id == shop.id|string %}selected{% endif %}>
-                            {{ shop.shop_name }}
-                        </option>
+                        <option value="{{ shop.id }}" {% if filters.shop_id == shop.id|string %}selected{% endif %}>{{ shop.shop_name }}</option>
                     {% endfor %}
                 </select>
             </div>
             <div class="col-md-2">
-                <label class="form-label">{{ t('brand') }}</label>
-                <input type="text" name="brand" class="form-control" placeholder="e.g. Samsung" value="{{ filters.brand }}">
+                <input type="text" name="brand" class="form-control form-control-sm" placeholder="Brand" value="{{ filters.brand }}">
             </div>
             <div class="col-md-2">
-                <label class="form-label">{{ t('select_status') }}</label>
-                <select name="status" class="form-select">
+                <select name="status" class="form-select form-select-sm">
                     <option value="">All</option>
                     <option value="active" {% if filters.status == 'active' %}selected{% endif %}>Active</option>
                     <option value="stolen" {% if filters.status == 'stolen' %}selected{% endif %}>Stolen</option>
@@ -36,28 +30,27 @@
                     <option value="recovered" {% if filters.status == 'recovered' %}selected{% endif %}>Recovered</option>
                 </select>
             </div>
-            <div class="col-md-2 d-flex align-items-end gap-2">
-                <button class="btn btn-primary w-100">{{ t('search_btn') }}</button>
-                <a href="/admin/all-mobiles" class="btn btn-secondary w-100">{{ t('clear_filters') }}</a>
+            <div class="col-md-2 d-flex gap-1">
+                <button class="btn btn-primary btn-sm w-100">{{ t('search_btn') }}</button>
+                <a href="/admin/all-mobiles" class="btn btn-secondary btn-sm w-100">{{ t('clear_filters') }}</a>
             </div>
         </form>
     </div>
 </div>
 
-<!-- RESULTS TABLE -->
-<div class="table-responsive">
+<div class="table-container">
     <table class="table table-striped table-bordered">
-        <thead class="table-dark">
+        <thead>
             <tr>
                 <th>IMEI</th>
                 <th>{{ t('source_type') }}</th>
                 <th>{{ t('shop_name') }}</th>
                 <th>{{ t('brand') }}/{{ t('model') }}</th>
-                <th>{{ t('purchase_price') }}</th>
                 <th>{{ t('customer_seller') }}</th>
                 <th>{{ t('tazkira_id') }}</th>
                 <th>{{ t('selfie_photo') }}</th>
                 <th>{{ t('status') }}</th>
+                <th>{{ t('purchase_price') }}</th>
                 <th>{{ t('added_date') }}</th>
                 <th>{{ t('actions') }}</th>
             </tr>
@@ -76,7 +69,6 @@
                 </td>
                 <td>{{ m.owner_shop.shop_name }}</td>
                 <td>{{ m.brand }} {{ m.model }}</td>
-               <td>{{ m.purchase_price if m.purchase_price else '-' }} {{ t('purchase_price_afn') }}</td>
                 <td>
                     {% if m.source_type == 'local' and m.customer_name %}
                         {{ m.customer_name }}<br><small>{{ m.customer_phone }}</small>
@@ -95,24 +87,25 @@
                     {% endif %}
                 </td>
                 <td>
-    {% if m.selfie_photo %}
-        <a href="{{ m.selfie_photo }}" target="_blank">
-            <img src="{{ m.selfie_photo }}" alt="Selfie" style="width:40px; height:40px; object-fit:cover; border-radius:5px; border:1px solid #ccc;">
-        </a>
-    {% else %}
-        -
-    {% endif %}
-</td>
+                    {% if m.selfie_photo %}
+                        <a href="{{ m.selfie_photo }}" target="_blank">
+                            <img src="{{ m.selfie_photo }}" alt="Selfie" style="width:35px; height:35px; object-fit:cover; border-radius:5px; border:1px solid #ccc;">
+                        </a>
+                    {% else %}
+                        -
+                    {% endif %}
+                </td>
                 <td>
                     <span class="badge bg-{% if m.status == 'stolen' %}danger{% elif m.status == 'detected' %}warning{% elif m.status == 'recovered' %}success{% else %}success{% endif %}">
                         {{ m.status.upper() }}
                     </span>
                 </td>
+                <td>{{ m.purchase_price if m.purchase_price else '-' }}</td>
                 <td><small>{{ m.created_at.strftime('%Y-%m-%d %H:%M') }}</small></td>
                 <td>
                     {% if m.status == 'active' %}
                     <form method="POST" action="/admin/report-stolen/{{ m.id }}" onsubmit="return confirm('Are you sure?');" style="display:inline;">
-                        <input type="text" name="description" placeholder="Reason" class="form-control form-control-sm" style="width:80px; display:inline;" required>
+                        <input type="text" name="description" placeholder="Reason" class="form-control form-control-sm" style="width:60px; display:inline;" required>
                         <button class="btn btn-sm btn-danger"><i class="fas fa-exclamation-triangle"></i></button>
                     </form>
                     {% elif m.status == 'stolen' or m.status == 'detected' %}
@@ -128,7 +121,7 @@
             {% endfor %}
         {% else %}
             <tr>
-                <td colspan="10" class="text-center text-muted">{{ t('no_records_found') }}</td>
+                <td colspan="11" class="text-center text-muted">{{ t('no_records_found') }}</td>
             </tr>
         {% endif %}
         </tbody>
