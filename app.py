@@ -376,6 +376,30 @@ def admin_shops():
     all_shops = Shop.query.all()
     return render_template('admin_shops.html', shops=all_shops)
 
+# ---------- PWA MANIFEST ----------
+@app.route('/manifest.json')
+def manifest():
+    return {
+        "name": "Kandahar Mobile System",
+        "short_name": "Kandahar Mobile",
+        "start_url": "/",
+        "display": "standalone",
+        "background_color": "#1a3a5c",
+        "theme_color": "#1a3a5c",
+        "icons": [
+            {
+                "src": "/static/icon-192.png",
+                "sizes": "192x192",
+                "type": "image/png"
+            },
+            {
+                "src": "/static/icon-512.png",
+                "sizes": "512x512",
+                "type": "image/png"
+            }
+        ]
+    }
+
 @app.route('/admin/change-role/<int:shop_id>', methods=['POST'])
 @login_required
 def change_role(shop_id):
