@@ -2,7 +2,7 @@
 <html lang="{{ current_lang }}">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>{{ t('app_name') }}</title>
 <!-- PWA Manifest & Meta Tags -->
 <link rel="manifest" href="/manifest.json">
@@ -519,3 +519,19 @@
         });
     }
 </script>
+/* ---------- FIX SIDE SCROLL ON MOBILE ---------- */
+* {
+    box-sizing: border-box;
+}
+html, body {
+    overflow-x: hidden;
+    max-width: 100%;
+}
+.container {
+    padding-left: 10px;
+    padding-right: 10px;
+}
+.table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
