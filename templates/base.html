@@ -321,6 +321,22 @@
             color: white;
             margin-left: 4px;
         }
+/* ---------- FIX SIDE SCROLL ON MOBILE ---------- */
+* {
+    box-sizing: border-box;
+}
+html, body {
+    overflow-x: hidden;
+    max-width: 100%;
+}
+.container {
+    padding-left: 10px;
+    padding-right: 10px;
+}
+.table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
     </style>
 </head>
 <body>
@@ -354,22 +370,7 @@
                         <li class="nav-item"><a class="nav-link" href="/shop/login">{{ t('login') }}</a></li>
                     {% endif %}
                 </ul>
-/* ---------- FIX SIDE SCROLL ON MOBILE ---------- */
-* {
-    box-sizing: border-box;
-}
-html, body {
-    overflow-x: hidden;
-    max-width: 100%;
-}
-.container {
-    padding-left: 10px;
-    padding-right: 10px;
-}
-.table-responsive {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-}
+
                 <!-- USERNAME -->
                 {% if current_user.is_authenticated %}
                 <span class="navbar-text text-white me-3">
