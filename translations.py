@@ -1,7 +1,7 @@
 # translations.py
 T = {
     'en': {
-        'app_name': '📱 Kandahar Mobile Registration Management System',
+        'app_name': '📱 Kandahar City Mobile Sellers Registration System',
         'home': 'Home',
         'check_imei': 'Check IMEI',
         'login': 'Login',
@@ -51,7 +51,7 @@ T = {
         'add_success': 'Mobile added successfully!',
         'notif_title': 'My Alerts',
         'no_notif': 'No notifications.',
-        'demo_creds': 'Demo Shop: demo_shop / demo123',
+        'demo_creds': '© 2026 Al Jadid Rahat Market',
         'dark_mode': '🌙 Dark Mode',
         'light_mode': '☀️ Light Mode',
         'switch_lang': 'Language',
@@ -136,7 +136,7 @@ T = {
         'not_stolen': 'This mobile is not marked as stolen.',
     },
     'ps': {
-        'app_name': '📱 د کندهار موبایل ثبت مدیریت سیستم',
+        'app_name': '📱 د کندهارښارد موبایل پلورنکو د ثبت سیستم',
         'home': 'کور',
         'check_imei': 'د IMEI چک',
         'login': 'ننوتل',
@@ -186,7 +186,7 @@ T = {
         'add_success': 'موبایل په بریالیتوب سره زیات شو!',
         'notif_title': 'زما خبرتیاوې',
         'no_notif': 'هیڅ خبرتیا نشته.',
-        'demo_creds': 'نمونه دوکان: demo_shop / demo123',
+        'demo_creds': 'راحت الجديد مارکيټ © ۲۰۲۶',
         'dark_mode': '🌙 تیاره حالت',
         'light_mode': '☀️ رڼا حالت',
         'switch_lang': 'ژبه',
@@ -275,7 +275,7 @@ T = {
 
     },
     'fa': {
-        'app_name': '📱 سیستم مدیریت ثبت موبایل قندهار',
+        'app_name': '📱 سیستم ثبت فروشندګان موبایل شهر قندهار',
         'home': 'خانه',
         'check_imei': 'بررسی IMEI',
         'login': 'ورود',
@@ -325,7 +325,7 @@ T = {
         'add_success': 'موبایل با موفقیت اضافه شد!',
         'notif_title': 'اطلاعیه‌های من',
         'no_notif': 'هیچ اطلاعیه‌ای وجود ندارد.',
-        'demo_creds': 'دکان آزمایشی: demo_shop / demo123',
+        'demo_creds': 'راحت الجديد مارکيټ © ۲۰۲۶',
         'dark_mode': '🌙 حالت تیره',
         'light_mode': '☀️ حالت روشن',
         'switch_lang': 'زبان',
