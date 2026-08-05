@@ -136,7 +136,7 @@ T = {
         'not_stolen': 'This mobile is not marked as stolen.',
     },
     'ps': {
-        'app_name': '📱 د کندهارښارد موبایل پلورنکو د ثبت سیستم',
+        'app_name': '📱 د کندهار ښار د موبایل پلورنکو د ثبت سیستم',
         'home': 'کور',
         'check_imei': 'د IMEI چک',
         'login': 'ننوتل',
