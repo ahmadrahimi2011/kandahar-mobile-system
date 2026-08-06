@@ -149,7 +149,7 @@ def upload_to_r2(file, folder_name):
             filename,
             ExtraArgs={'ACL': 'public-read'}
         )
-        public_url = f"{os.getenv('R2_ENDPOINT')}/{os.getenv('R2_BUCKET_NAME')}/{filename}"
+        public_url = f"https://{os.getenv('R2_PUBLIC_URL')}/{filename}"
         return public_url
     except Exception as e:
         print(f"Upload error: {e}")
@@ -162,7 +162,7 @@ def delete_photo_from_r2(photo_url):
     try:
         endpoint = os.getenv('R2_ENDPOINT')
         bucket = os.getenv('R2_BUCKET_NAME')
-        prefix = f"{endpoint}/{bucket}/"
+        prefix = f"https://{os.getenv('R2_PUBLIC_URL')}/"
         if photo_url.startswith(prefix):
             file_path = photo_url[len(prefix):]
             s3.delete_object(Bucket=bucket, Key=file_path)
