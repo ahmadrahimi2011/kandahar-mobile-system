@@ -626,6 +626,47 @@ def admin_delete_mobile(mobile_id):
     flash(get_text('record_deleted'), 'success')
     return redirect(url_for('admin_all_mobiles'))
 
+@app.route('/test-r2')
+def test_r2():
+    try:
+        import boto3
+        from botocore.config import Config
+        
+        endpoint = os.getenv('R2_ENDPOINT')
+        access_key = os.getenv('R2_ACCESS_KEY_ID')
+        secret_key = os.getenv('R2_SECRET_ACCESS_KEY')
+        bucket = os.getenv('R2_BUCKET_NAME')
+        
+        # Check if variables exist
+        if not endpoint:
+            return "❌ R2_ENDPOINT is missing"
+        if not access_key:
+            return "❌ R2_ACCESS_KEY_ID is missing"
+        if not secret_key:
+            return "❌ R2_SECRET_ACCESS_KEY is missing"
+        if not bucket:
+            return "❌ R2_BUCKET_NAME is missing"
+        
+        s3 = boto3.client(
+            service_name='s3',
+            endpoint_url=endpoint,
+            aws_access_key_id=access_key,
+            aws_secret_access_key=secret_key,
+            config=Config(signature_version='s3v4'),
+            region_name='auto'
+        )
+        
+        # Try to list objects
+        response = s3.list_objects_v2(Bucket=bucket)
+        return f"""
+        ✅ R2 Connection Successful!
+        Endpoint: {endpoint}
+        Bucket: {bucket}
+        Objects in bucket: {response.get('KeyCount', 0)}
+        """
+    except Exception as e:
+        return f"❌ R2 Connection Failed: {str(e)}"
+
 # ---------- API UNREAD COUNT ----------
 @app.route('/api/unread-count')
 @login_required
