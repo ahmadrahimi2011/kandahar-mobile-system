@@ -138,7 +138,7 @@ def notify_shop(shop_id, message):
     db.session.add(notif)
     db.session.commit()
 
-# ---------- R2 UPLOAD FUNCTION ----------
+# ---------- R2 UPLOAD FUNCTION (FIXED) ----------
 def upload_to_r2(file, folder_name):
     try:
         timestamp = datetime.utcnow().timestamp()
@@ -149,24 +149,26 @@ def upload_to_r2(file, folder_name):
             filename,
             ExtraArgs={'ACL': 'public-read'}
         )
+        # ✅ SAHI URL (r2.dev wala)
         public_url = f"https://{os.getenv('R2_PUBLIC_URL')}/{filename}"
         return public_url
     except Exception as e:
         print(f"Upload error: {e}")
         return None
 
-# ---------- R2 DELETE FUNCTION ----------
+# ---------- R2 DELETE FUNCTION (FIXED) ----------
 def delete_photo_from_r2(photo_url):
     if not photo_url:
         return
     try:
-        endpoint = os.getenv('R2_ENDPOINT')
         bucket = os.getenv('R2_BUCKET_NAME')
         prefix = f"https://{os.getenv('R2_PUBLIC_URL')}/"
         if photo_url.startswith(prefix):
             file_path = photo_url[len(prefix):]
             s3.delete_object(Bucket=bucket, Key=file_path)
             print(f"Deleted photo: {file_path}")
+        else:
+            print(f"URL doesn't match prefix: {photo_url}")
     except Exception as e:
         print(f"Error deleting photo: {e}")
 
@@ -609,7 +611,7 @@ def admin_delete_mobile(mobile_id):
 
     mobile = Mobile.query.get_or_404(mobile_id)
 
-    # ---------- DELETE PHOTOS FROM R2 ----------
+    # ---------- DELETE PHOTOS FROM R2 (FIXED) ----------
     if mobile.tazkira_photo:
         delete_photo_from_r2(mobile.tazkira_photo)
     if mobile.selfie_photo:
@@ -623,8 +625,6 @@ def admin_delete_mobile(mobile_id):
 
     flash(get_text('record_deleted'), 'success')
     return redirect(url_for('admin_all_mobiles'))
-
-
 
 # ---------- API UNREAD COUNT ----------
 @app.route('/api/unread-count')
