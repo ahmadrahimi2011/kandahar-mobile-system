@@ -618,29 +618,7 @@ def admin_delete_mobile(mobile_id):
 
     mobile = Mobile.query.get_or_404(mobile_id)
 
-    # ---------- DELETE PHOTOS FROM SUPABASE ----------
-    if mobile.tazkira_photo:
-        delete_photo_from_supabase(mobile.tazkira_photo)
-    if mobile.selfie_photo:
-        delete_photo_from_supabase(mobile.selfie_photo)
-
-    # ---------- DELETE RECORD ----------
-    StolenReport.query.filter_by(mobile_id=mobile.id).delete()
-    DetectionLog.query.filter_by(mobile_id=mobile.id).delete()
-    db.session.delete(mobile)
-    db.session.commit()
-
-    flash(get_text('record_deleted'), 'success')
-    return redirect(url_for('admin_all_mobiles'))
-
-@app.route('/admin/delete-mobile/<int:mobile_id>', methods=['POST'])
-@login_required
-def admin_delete_mobile(mobile_id):
-    if current_user.role != 'admin':
-        flash(get_text('access_denied'), 'danger')
-        return redirect(url_for('shop_dashboard'))
-
-    mobile = Mobile.query.get_or_404(mobile_id)
+   
 
     # ---------- DELETE PHOTOS FROM R2 ----------
     if mobile.tazkira_photo:
