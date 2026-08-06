@@ -13,7 +13,6 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
 from translations import T
 from dotenv import load_dotenv
-from supabase import create_client, Client
 
 load_dotenv()
 
@@ -26,16 +25,6 @@ db = SQLAlchemy(app)
 login_manager = LoginManager(app)
 login_manager.login_view = 'shop_login'
 
-# ---------- SUPABASE SETUP ----------
-SUPABASE_URL = os.getenv('SUPABASE_URL')
-SUPABASE_KEY = os.getenv('SUPABASE_KEY')
-BUCKET_NAME = 'kandahar-photos'
-
-supabase_client: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
-
-import boto3
-from botocore.config import Config
-
 # ---------- CLOUDFLARE R2 CONFIG ----------
 s3 = boto3.client(
     service_name='s3',
@@ -45,22 +34,6 @@ s3 = boto3.client(
     config=Config(signature_version='s3v4'),
     region_name='auto'
 )
-
-def upload_to_r2(file, folder_name):
-    try:
-        timestamp = datetime.utcnow().timestamp()
-        filename = f"{folder_name}/{timestamp}_{file.filename}"
-        s3.upload_fileobj(
-            file,
-            os.getenv('R2_BUCKET_NAME'),
-            filename,
-            ExtraArgs={'ACL': 'public-read'}
-        )
-        public_url = f"{os.getenv('R2_ENDPOINT')}/{os.getenv('R2_BUCKET_NAME')}/{filename}"
-        return public_url
-    except Exception as e:
-        print(f"Upload error: {e}")
-        return None
 
 # ---------- LANGUAGES ----------
 LANGUAGES = ['en', 'ps', 'fa']
@@ -108,7 +81,7 @@ class Mobile(db.Model):
     tazkira_number = db.Column(db.String(50))
     tazkira_photo = db.Column(db.String(300))
     selfie_photo = db.Column(db.String(300))
-    purchase_price = db.Column(db.Integer, default=0)  # ✅ Purchase Price
+    purchase_price = db.Column(db.Integer, default=0)
     status = db.Column(db.String(20), default='active')
     shop_id = db.Column(db.Integer, db.ForeignKey('shops.id'))
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
@@ -165,6 +138,7 @@ def notify_shop(shop_id, message):
     db.session.add(notif)
     db.session.commit()
 
+# ---------- R2 UPLOAD FUNCTION ----------
 def upload_to_r2(file, folder_name):
     try:
         timestamp = datetime.utcnow().timestamp()
@@ -181,17 +155,17 @@ def upload_to_r2(file, folder_name):
         print(f"Upload error: {e}")
         return None
 
-def delete_photo_from_supabase(photo_url):
-    """Delete a photo from Supabase Storage given its public URL."""
+# ---------- R2 DELETE FUNCTION ----------
+def delete_photo_from_r2(photo_url):
     if not photo_url:
         return
     try:
-        # Extract the file path from the public URL
-        # Example: https://.../storage/v1/object/public/kandahar-photos/tazkira/123.jpg
-        parts = photo_url.split(f'/public/{BUCKET_NAME}/')
-        if len(parts) == 2:
-            file_path = parts[1]
-            supabase_client.storage.from_(BUCKET_NAME).remove([file_path])
+        endpoint = os.getenv('R2_ENDPOINT')
+        bucket = os.getenv('R2_BUCKET_NAME')
+        prefix = f"{endpoint}/{bucket}/"
+        if photo_url.startswith(prefix):
+            file_path = photo_url[len(prefix):]
+            s3.delete_object(Bucket=bucket, Key=file_path)
             print(f"Deleted photo: {file_path}")
         else:
             print(f"Invalid URL format: {photo_url}")
@@ -400,7 +374,7 @@ def manifest():
         "name": "Kandahar Mobile System",
         "short_name": "Kandahar Mobile",
         "start_url": "/",
-        "display": "standalone",   # Yeh full screen ke liye zaroori hai
+        "display": "standalone",
         "orientation": "portrait",
         "scope": "/",
         "background_color": "#1a3a5c",
@@ -627,7 +601,7 @@ def recover_mobile(mobile_id):
     flash('Mobile marked as recovered by Admin!', 'success')
     return redirect(url_for('admin_all_mobiles'))
 
-# ---------- ADMIN DELETE MOBILE (with photo delete) ----------
+# ---------- ADMIN DELETE MOBILE (with R2 photo delete) ----------
 @app.route('/admin/delete-mobile/<int:mobile_id>', methods=['POST'])
 @login_required
 def admin_delete_mobile(mobile_id):
@@ -636,8 +610,6 @@ def admin_delete_mobile(mobile_id):
         return redirect(url_for('shop_dashboard'))
 
     mobile = Mobile.query.get_or_404(mobile_id)
-
-   
 
     # ---------- DELETE PHOTOS FROM R2 ----------
     if mobile.tazkira_photo:
@@ -653,8 +625,6 @@ def admin_delete_mobile(mobile_id):
 
     flash(get_text('record_deleted'), 'success')
     return redirect(url_for('admin_all_mobiles'))
-
-
 
 # ---------- API UNREAD COUNT ----------
 @app.route('/api/unread-count')
