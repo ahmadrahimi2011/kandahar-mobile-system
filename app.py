@@ -167,8 +167,6 @@ def delete_photo_from_r2(photo_url):
             file_path = photo_url[len(prefix):]
             s3.delete_object(Bucket=bucket, Key=file_path)
             print(f"Deleted photo: {file_path}")
-        else:
-            print(f"Invalid URL format: {photo_url}")
     except Exception as e:
         print(f"Error deleting photo: {e}")
 
