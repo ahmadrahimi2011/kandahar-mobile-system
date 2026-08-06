@@ -67,7 +67,7 @@
                     
                     {% if mobile.selfie_photo %}
                         <p><strong>{{ t('selfie_photo') }}:</strong><br>
-                        <a href="/static/{{ mobile.selfie_photo }}" target="_blank">
+                        <img src="{{ mobile.selfie_photo }}" alt="Selfie">
                             <img src="{{ mobile.selfie_photo }}" alt="Selfie" style="max-width:150px; border:1px solid #ccc; padding:5px; border-radius:5px;">s
                     {% endif %}
                     {% else %}

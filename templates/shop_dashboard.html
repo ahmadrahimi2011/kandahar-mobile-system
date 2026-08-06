@@ -52,13 +52,12 @@
                     <small>{{ m.customer_phone }}</small><br>
                     <small>{{ t('tazkira_id') }}: {{ m.tazkira_number }}</small>
                     {% if m.tazkira_photo %}
-                        <br><a href="/static/{{ m.tazkira_photo }}" target="_blank">📷 {{ t('view_tazkira') }}</a>
-                    {% endif %}
-                {% elif m.source_type == 'import' %}
-                    <span class="text-muted">{{ t('imported') }}</span>
-                {% else %}
-                    <span class="text-muted">-</span>
-                {% endif %}
+    <a href="{{ m.tazkira_photo }}" target="_blank">
+        <img src="{{ m.tazkira_photo }}" alt="Tazkira" style="width:50px; height:50px; object-fit:cover; border-radius:5px; border:1px solid #ccc;">
+    </a>
+{% else %}
+    -
+{% endif %}
             </td>
             <td>
                 {% if m.selfie_photo %}
