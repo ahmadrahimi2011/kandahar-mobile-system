@@ -4,6 +4,8 @@ import random
 import string
 import base64
 import requests
+import boto3
+from botocore.config import Config
 from flask import Flask, render_template, request, redirect, url_for, flash, session
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
@@ -30,6 +32,16 @@ SUPABASE_KEY = os.getenv('SUPABASE_KEY')
 BUCKET_NAME = 'kandahar-photos'
 
 supabase_client: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+
+# ---------- CLOUDFLARE R2 CONFIG ----------
+s3 = boto3.client(
+    service_name='s3',
+    endpoint_url=os.getenv('R2_ENDPOINT'),
+    aws_access_key_id=os.getenv('R2_ACCESS_KEY_ID'),
+    aws_secret_access_key=os.getenv('R2_SECRET_ACCESS_KEY'),
+    config=Config(signature_version='s3v4'),
+    region_name='auto'
+)
 
 # ---------- LANGUAGES ----------
 LANGUAGES = ['en', 'ps', 'fa']
@@ -134,34 +146,20 @@ def notify_shop(shop_id, message):
     db.session.add(notif)
     db.session.commit()
 
-def upload_to_supabase(file, folder_name):
+def upload_to_r2(file, folder_name):
     try:
-        file.seek(0)
-        file_data = file.read()
         timestamp = datetime.utcnow().timestamp()
-        original_filename = file.filename
-        if '.' in original_filename:
-            extension = original_filename.rsplit('.', 1)[1].lower()
-        else:
-            extension = 'jpg'
-        filename = f"{timestamp}.{extension}"
-        file_path = f"{folder_name}/{filename}"
-
-        url = f"{SUPABASE_URL}/storage/v1/object/{BUCKET_NAME}/{file_path}"
-        headers = {
-            "Authorization": f"Bearer {SUPABASE_KEY}",
-            "Content-Type": file.content_type,
-            "x-upsert": "true"
-        }
-        response = requests.post(url, headers=headers, data=file_data)
-        if response.status_code in [200, 201]:
-            public_url = f"{SUPABASE_URL}/storage/v1/object/public/{BUCKET_NAME}/{file_path}"
-            return public_url
-        else:
-            print(f"Upload failed: {response.status_code} - {response.text}")
-            return None
+        filename = f"{folder_name}/{timestamp}_{file.filename}"
+        s3.upload_fileobj(
+            file,
+            os.getenv('R2_BUCKET_NAME'),
+            filename,
+            ExtraArgs={'ACL': 'public-read'}
+        )
+        public_url = f"{os.getenv('R2_ENDPOINT')}/{os.getenv('R2_BUCKET_NAME')}/{filename}"
+        return public_url
     except Exception as e:
-        print(f"Upload exception: {str(e)}")
+        print(f"Upload error: {e}")
         return None
 
 def delete_photo_from_supabase(photo_url):
@@ -246,7 +244,7 @@ def add_mobile():
         if 'tazkira_photo' in request.files:
             file = request.files['tazkira_photo']
             if file and file.filename != '':
-                tazkira_photo_url = upload_to_supabase(file, 'tazkira')
+                tazkira_photo_url = upload_to_r2(file, 'tazkira')
                 if not tazkira_photo_url:
                     flash('Error uploading Tazkira photo. Please try again.', 'danger')
                     return redirect(url_for('add_mobile'))
@@ -255,7 +253,7 @@ def add_mobile():
         if 'selfie_photo' in request.files:
             file = request.files['selfie_photo']
             if file and file.filename != '':
-                selfie_photo_url = upload_to_supabase(file, 'selfie')
+                selfie_photo_url = upload_to_r2(file, 'selfie')
                 if not selfie_photo_url:
                     flash('Error uploading Selfie photo. Please try again.', 'danger')
                     return redirect(url_for('add_mobile'))
@@ -625,6 +623,30 @@ def admin_delete_mobile(mobile_id):
         delete_photo_from_supabase(mobile.tazkira_photo)
     if mobile.selfie_photo:
         delete_photo_from_supabase(mobile.selfie_photo)
+
+    # ---------- DELETE RECORD ----------
+    StolenReport.query.filter_by(mobile_id=mobile.id).delete()
+    DetectionLog.query.filter_by(mobile_id=mobile.id).delete()
+    db.session.delete(mobile)
+    db.session.commit()
+
+    flash(get_text('record_deleted'), 'success')
+    return redirect(url_for('admin_all_mobiles'))
+
+@app.route('/admin/delete-mobile/<int:mobile_id>', methods=['POST'])
+@login_required
+def admin_delete_mobile(mobile_id):
+    if current_user.role != 'admin':
+        flash(get_text('access_denied'), 'danger')
+        return redirect(url_for('shop_dashboard'))
+
+    mobile = Mobile.query.get_or_404(mobile_id)
+
+    # ---------- DELETE PHOTOS FROM R2 ----------
+    if mobile.tazkira_photo:
+        delete_photo_from_r2(mobile.tazkira_photo)
+    if mobile.selfie_photo:
+        delete_photo_from_r2(mobile.selfie_photo)
 
     # ---------- DELETE RECORD ----------
     StolenReport.query.filter_by(mobile_id=mobile.id).delete()
