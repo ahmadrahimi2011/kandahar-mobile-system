@@ -58,18 +58,22 @@
                     <p><strong>{{ t('seller_phone') }}:</strong> {{ mobile.customer_phone }}</p>
                     <p><strong>{{ t('tazkira_id') }}:</strong> {{ mobile.tazkira_number }}</p>
                     
+                    <!-- ✅ TAZKIRA PHOTO (Thumbnail + Clickable) -->
                     {% if mobile.tazkira_photo %}
-                        <p><strong>{{ t('tazkira_photo_upload') }}:</strong><br>
+                        <p><strong>{{ t('tazkira_photo_upload') }}:</strong></p>
                         <a href="{{ mobile.tazkira_photo }}" target="_blank">
-    <img src="{{ mobile.tazkira_photo }}" alt="Tazkira" style="max-width:150px;">
-</a>
+                            <img src="{{ mobile.tazkira_photo }}" alt="Tazkira" style="max-width:100px; height:auto; border:1px solid #ccc; padding:5px; border-radius:5px;">
+                        </a>
                     {% endif %}
                     
+                    <!-- ✅ SELFIE PHOTO (Thumbnail + Clickable) -->
                     {% if mobile.selfie_photo %}
-                        <p><strong>{{ t('selfie_photo') }}:</strong><br>
-                        <img src="{{ mobile.selfie_photo }}" alt="Selfie">
-                            <img src="{{ mobile.selfie_photo }}" alt="Selfie" style="max-width:150px; border:1px solid #ccc; padding:5px; border-radius:5px;">s
+                        <p><strong>{{ t('selfie_photo') }}:</strong></p>
+                        <a href="{{ mobile.selfie_photo }}" target="_blank">
+                            <img src="{{ mobile.selfie_photo }}" alt="Selfie" style="max-width:100px; height:auto; border:1px solid #ccc; padding:5px; border-radius:5px;">
+                        </a>
                     {% endif %}
+                    
                     {% else %}
                         <span class="text-muted">{{ t('imported') }}</span>
                     {% endif %}
