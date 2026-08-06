@@ -33,6 +33,9 @@ BUCKET_NAME = 'kandahar-photos'
 
 supabase_client: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
+import boto3
+from botocore.config import Config
+
 # ---------- CLOUDFLARE R2 CONFIG ----------
 s3 = boto3.client(
     service_name='s3',
@@ -42,6 +45,22 @@ s3 = boto3.client(
     config=Config(signature_version='s3v4'),
     region_name='auto'
 )
+
+def upload_to_r2(file, folder_name):
+    try:
+        timestamp = datetime.utcnow().timestamp()
+        filename = f"{folder_name}/{timestamp}_{file.filename}"
+        s3.upload_fileobj(
+            file,
+            os.getenv('R2_BUCKET_NAME'),
+            filename,
+            ExtraArgs={'ACL': 'public-read'}
+        )
+        public_url = f"{os.getenv('R2_ENDPOINT')}/{os.getenv('R2_BUCKET_NAME')}/{filename}"
+        return public_url
+    except Exception as e:
+        print(f"Upload error: {e}")
+        return None
 
 # ---------- LANGUAGES ----------
 LANGUAGES = ['en', 'ps', 'fa']
